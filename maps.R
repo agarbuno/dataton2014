@@ -52,13 +52,14 @@ geom_segment2 <- function(mapping = NULL, data = NULL, stat = "identity",
   GeomSegment2$new(mapping = mapping, data = data, stat = stat, 
                    position = position, arrow = arrow, ...)
 }
+
 munmap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Municipios/jal_municipal.shp",
                       verbose = TRUE, proj4string = CRS("+proj=longlat"))
 
 map <- readShapeLines("/Users/alfredogarbuno/dataton/inegi/Vialidades/jal_eje_vial.shp",
                      verbose = TRUE, proj4string = CRS("+proj=longlat"))
 
-submap <- subset(map, substr(CVEGEO,1,5) %in% c(14120))
+submap <- subset(map, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039))
 
 map.2 <- conv_sp_lines_to_seg(submap)
 
@@ -75,3 +76,9 @@ ggplot(data = shape.fort, aes(x = long, y = lat)) +
   labs(title = "Zapopan", x = "", y = "") +
   geom_point(data = social, aes(x = lon, y = lat, color = social), size = .5)
 
+image <- ggplot(map.2, aes(x=slon,y=slat)) + 
+  streets +
+  labs(title = "Zapopan", x = "", y = "") + coord_fixed() + 
+  geom_point(data = social, aes(x = lon, y = lat, color = social), size = .5)
+
+image

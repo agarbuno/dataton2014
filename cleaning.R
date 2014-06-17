@@ -36,7 +36,5 @@ users <- social[, list(count = .N, min.date = min(date), max.date = max(date), d
 users <- users[order(count)]
 
 res <- social[,data.table(kmeans(cbind(lat,lon),centers=1)$centers, count = .N),by=user]
-res
-users
-table(users$days)
+
 #res <- ddply(social, 'user', summarise, mean = mean(time))
