@@ -31,11 +31,12 @@ rm('foursq')
 social$date <- as.Date(time)
 social$time <- hour(time) + minute(time)/60 + second(time)/3600
 
-users <- social[, list(count = .N, min.date = min(date), max.date = max(date), days = as.numeric(max(date) - min(date))
-                       , ratio = .N/as.numeric(max(date) - min(date))), by = list(user)]
+users <- social[, list(count = .N, min.date = min(date), max.date = max(date), days = as.numeric(max(date) - min(date) + 1 )
+                       , ratio = .N/as.numeric(max(date) - min(date) + 1)), by = list(user)]
 users <- users[order(count)]
 
 res <- social[,data.table(kmeans(cbind(lat,lon),centers=1)$centers, count = .N),by=user]
 res
-
+users
+table(users$days)
 #res <- ddply(social, 'user', summarise, mean = mean(time))
