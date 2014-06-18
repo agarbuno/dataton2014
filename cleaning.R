@@ -30,15 +30,18 @@ rm('foursq')
 
 social$date <- as.Date(time)
 social$time <- hour(time) + minute(time)/60 + second(time)/3600
+social$hour <- paste(substr(formatC(hour(time), digits = 2, flag = 0), 2,3)
+                     , substr(formatC(minute(time), digits = 2, flag = 0), 2,3)
+                     , substr(formatC(second(time), digits = 2, flag = 0), 2,3)
+                     , sep = ':')
+social
 
 users <- social[, list(count = .N, min.date = min(date), max.date = max(date), days = as.numeric(max(date) - min(date) + 1 )
                        , ratio = .N/as.numeric(max(date) - min(date) + 1)), by = list(user)]
 users <- users[order(count)]
-
 users <- subset(users, days <= 10)
 
 social$day <- wday(social$date, label = TRUE, abbr = FALSE)
-
 turistas <- subset(social, user %in% users$user)
 
 #res <- social[,data.table(kmeans(cbind(lat,lon),centers=1)$centers, count = .N),by=user]

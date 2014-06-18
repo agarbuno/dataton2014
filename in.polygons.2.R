@@ -1,4 +1,5 @@
 library(data.table)
+library(ggmap)
 library(igraph)
 library(reshape2)
 
@@ -55,31 +56,46 @@ factors <- levels(factor(subagebmap@data$CVEGEO))
 tur$ageb <- as.character(tur$ageb)
 tur <- tur[order(user)]
 
+tur.2 <- tur
+tur.2$id <- paste(tur[,date], tur[,hour], tur[,ageb], sep = '|')
+tur.3 <- tur.2[seq(1:100),]
+
 #subtur <- tur[seq(1:1000),]
 #ddply(subtur, .(user), summarise, len = length(levels(factor(ageb))))
 
-res <- data.table(ddply(tur, .(user), function(data) { 
-  expand.grid( levels(factor(data$ageb)), levels(factor(data$ageb)))
-  }, .parallel = TRUE))
-res <- subset(res, as.character(Var1) <= as.character(Var2))
+res <- data.table(ddply(tur.2, .(user), function(data) {
+  dt <- data.frame(expand.grid( data$id, data$id ))
+  dt$date1 <- substr(dt$Var1,1,10)
+  dt$date2 <- substr(dt$Var2,1,10)
+  dt$hour1 <- as.numeric(substr(dt$Var1,12,13)) + as.numeric(substr(dt$Var1,15,16)) /60 + as.numeric(substr(dt$Var1,18,19)) / 3600
+  dt$hour2 <- as.numeric(substr(dt$Var2,12,13)) + as.numeric(substr(dt$Var2,15,16)) /60 + as.numeric(substr(dt$Var2,18,19)) / 3600
+  dt$Var1 <- substr(dt$Var1, 21, 34)
+  dt$Var2 <- substr(dt$Var2, 21, 34)
+  subset(dt, date1 == date2 & hour1 < hour2 & hour2 - hour1 < 4)
+  }, 
+  .parallel = TRUE))
 res <- res[order(user)]
-edges <- res[, list(count = .N), by = list(Var1,Var2)]
+
+#edges <- res[, list(count = .N), by = list(Var1,Var2)]
+edges <- res[, list(count = .N, time = (mean(hour1) + mean(hour2)) / 2 ) , by = list(Var1,Var2,date1,user)]
 
 shape.fort <- data.table(shape.fort)
 centroids <- shape.fort[, data.table(kmeans(cbind(long,lat),centers=1)$centers) , by=id]
+centroids
 agebs <- data.frame(ageb = subagebmap@data$CVEGEO, id = subagebmap@data$OID-1)
 agebs <- plyr:::join(centroids, agebs, by= 'id')
 pesos <- tur[, list(count = .N), by = ageb]
 agebs <- plyr:::join(agebs, pesos, by= 'ageb', type = 'left')
 agebs[is.na(agebs)] <- 0
+agebs
 setcolorder(agebs, c('ageb', 'long', 'lat', 'id', 'count'))
 
 shape.fort <- plyr:::join(shape.fort, agebs, by= 'id', type = 'left')
 
 theme <- theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), 
-         axis.title.x = element_blank(), axis.title.y = element_blank(), 
-         axis.text.x = element_blank(), axis.text.y = element_blank()
-         )
+               axis.title.x = element_blank(), axis.title.y = element_blank(), 
+               axis.text.x = element_blank(), axis.text.y = element_blank()
+)
 
 ggplot(data = shape.fort, aes(x = long, y = lat)) + 
   geom_polygon(aes(group = group, fill = count)) +
@@ -107,7 +123,7 @@ ggplot(data = shape.fort, aes(x = long, y = lat)) +
   labs(title = "Pagerank", x = "", y = "") + theme + coord_equal() +
   theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
   scale_fill_continuous(low = 'black', high =  'tomato')
-  #geom_point(data = social, aes(x = lon, y = lat), alpha = .05, size = .4, color = 'white')
+#geom_point(data = social, aes(x = lon, y = lat), alpha = .05, size = .4, color = 'white')
 
 #quartz()
 ggplot(data = shape.fort, aes(x = long, y = lat)) + 
@@ -131,7 +147,8 @@ ggplot(data = shape.fort, aes(x = long, y = lat)) +
   scale_fill_continuous(low = 'black', high =  'tomato')
 
 # write.graph(graph, file = '/Users/alfredogarbuno/Desktop/export_02.gml', format = 'gml')
-setnames(edges, c('node1', 'node2', 'count'))
+edges
+setnames(edges, c('Var1', 'Var2', 'count'), c('node1', 'node2', 'count'))
 setnames(edges, c('node1'), c('ageb'))
 edges <- plyr:::join(edges, agebs, by= 'ageb')
 edges$id <- NULL
@@ -139,7 +156,8 @@ setnames(edges, c('ageb', 'node2', 'long', 'lat'), c('node1', 'ageb', 'long.1', 
 edges <- plyr:::join(edges, agebs, by= 'ageb')
 setnames(edges, c('ageb', 'long', 'lat'), c('node2', 'long.2', 'lat.2'))
 edges$id <- NULL
-setnames(edges, c('node1', 'node2', 'count', 'long.1', 'lat.1','count.1', 'long.2', 'lat.2', 'count.2'))
+edges
+setnames(edges, c('node1', 'node2', 'date', 'user', 'count',  'time', 'long.1', 'lat.1','count.1', 'long.2', 'lat.2', 'count.2'))
 
 theme <- theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), 
                axis.title.x = element_blank(), axis.title.y = element_blank(), 
@@ -150,17 +168,7 @@ ggplot(data = shape.fort, aes(x = long, y = lat)) +
   geom_polygon(aes(group = group), fill = 'black') +
   labs(title = "Zapopan", x = "", y = "") + theme + coord_equal() + 
   theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
-  geom_segment(data = edges, aes(x = long.1, y = lat.1, xend = long.2, yend = lat.2, color = node1), alpha = .1)
-
-#quartz()
-ggplot(data = shape.fort, aes(x = long, y = lat)) + 
-  geom_polygon(aes(group = group), fill = 'black') +
-  labs(title = "Zapopan", x = "", y = "") + theme + coord_equal() + 
-  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
-  stat_density2d(data = tur, aes(x = lon, y = lat, fill = ..level..,
-        alpha = ..level..), bins = 10,
-    geom = "polygon") +
-  scale_fill_gradient(low = "white", high= "green") 
+  geom_segment(data = subset(edges, count > 2), aes(x = long.1, y = lat.1, xend = long.2, yend = lat.2, color = node1), alpha = .15)
 
 #quartz()
 ggplot(data = shape.fort, aes(x = long, y = lat)) + 
@@ -170,5 +178,94 @@ ggplot(data = shape.fort, aes(x = long, y = lat)) +
   stat_density2d(data = tur, aes(x = lon, y = lat, fill = ..level..,
                                  alpha = ..level..), bins = 10,
                  geom = "polygon") +
-  scale_fill_gradient(low = "white", high= "green") +
+  scale_fill_gradient(low = "white", high= "red") 
+
+#quartz()
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group), fill = 'black') +
+  labs(title = "Zapopan", x = "", y = "") + theme + coord_equal() + 
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  stat_density2d(data = tur, aes(x = lon, y = lat, fill = ..level..,
+                                 alpha = ..level..), bins = 10,
+                 geom = "polygon") +
+  scale_fill_gradient(low = "white", high= "red") +
   facet_wrap(~day, ncol = 4)
+
+edges$dist <- ((edges[,lat.1]- edges[,lat.2])^2 + (edges[,long.1]- edges[,long.2])^2)^.5
+edges <- edges[order(dist)]
+
+routeQueryCheck()
+distQueryCheck()
+
+deg_to_dms<- function (degfloat){
+  deg <- as.integer(degfloat)
+  minfloat <- abs(60*(degfloat - deg))
+  min <- as.integer(minfloat)
+  secfloat <- abs(60*(minfloat - min))
+  ### Round seconds to desired accuracy:
+  secfloat <- round(secfloat, digits=3 )
+  ### After rounding, the seconds might become 60
+  ### The following if-tests are not necessary if no 
+  ### rounding is done.
+  if (secfloat == 60) {
+    min <- min + 1
+    secfloat <- 0
+  }
+  if (min == 60){
+    deg <- deg + 1
+    min <- 0
+  }
+  dm<-paste(deg,min,sep="º ")
+  dms<-paste(dm,secfloat,sep="' ")
+  return (dms)
+}
+
+edges$from <- paste(deg_to_dms(edges$lat.1), deg_to_dms(edges$long.1), sep = ',')
+edges$to <- paste(deg_to_dms(edges$lat.2), deg_to_dms(edges$long.2), sep = ',')
+edges$from[7695]
+
+df <- route(from = edges$from[7695], to = edges$to[7695], alternatives = FALSE)
+df
+
+edges$id <- seq(1,nrow(edges))
+str(subsubedges)
+
+subedges <- subset(edges, node1 != node2)
+df <- route(from = subedges[11,]$from, to = subedges[11,]$to, alternatives = FALSE)
+df
+subsubedges <- subedges[seq(1,100),]
+
+routes <- data.frame()
+counter <- 1
+routeQueryCheck()
+for (i in 54:2400){
+  data <- subedges[i,]
+  df <- route(from = data$from, to = data$to, alternatives = FALSE)
+  df <- df[, c('startLon', 'startLat', 'endLon', 'endLat', 'km', 'minutes')]
+  df$id <- data$id
+  routes <- rbind(routes, df)
+  cat('Paso: ', i)
+  if (counter == 9){
+    Sys.sleep(3)
+    counter <- 0
+  }
+  counter <- counter + 1
+}
+routeQueryCheck()
+routes
+
+# routes <- ddply(subsubedges, .(id),  function(data){ 
+#   df <- route(from = data$from, to = data$to, alternatives = FALSE)
+#   df <- df[, c('startLon', 'startLat', 'endLon', 'endLat', 'km', 'minutes')]
+#   df
+#   }, .progress = 'text')
+
+routes <- data.table(routes)
+
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group), fill = 'black') +
+  labs(title = "Zapopan", x = "", y = "") + theme + coord_equal() + 
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  geom_segment(
+    aes(x = startLon, y = startLat, xend = endLon, yend = endLat),
+    alpha = .2, data = df, color = 'yellow')
