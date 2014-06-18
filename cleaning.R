@@ -37,7 +37,11 @@ users <- users[order(count)]
 
 users <- subset(users, days <= 10)
 
+social$day <- wday(social$date, label = TRUE, abbr = FALSE)
+
 turistas <- subset(social, user %in% users$user)
 
 #res <- social[,data.table(kmeans(cbind(lat,lon),centers=1)$centers, count = .N),by=user]
 #res <- ddply(social, 'user', summarise, mean = mean(time))
+
+rm(time)

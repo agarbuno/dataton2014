@@ -2,6 +2,8 @@ library(data.table)
 library(igraph)
 library(reshape2)
 
+# http://spatial.ly/2012/02/great-maps-ggplot2/
+
 # munmap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Municipios/jal_municipal.shp",
 #                         verbose = TRUE, proj4string = CRS("+proj=longlat"))
 # 
@@ -23,6 +25,9 @@ agebmap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Ageb/jal_ageb_urb.
 
 subagebmap <- subset(agebmap, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039, 14097))
 
+shape.fort <- fortify(subagebmap) 
+shape.fort <- shape.fort[order(shape.fort$order), ] 
+
 ggplot(data = shape.fort, aes(x = long, y = lat)) + 
   geom_polygon(aes(group = group), colour='black', fill='white') +
   labs(title = "Zapopan", x = "", y = "") 
@@ -36,7 +41,7 @@ shape.fort <- fortify(subagebmap)
 shape.fort <- shape.fort[order(shape.fort$order), ] 
 # aux <- turistas
 # turistas <- social 
-turistas <- aux
+# turistas <- aux
 
 points <- SpatialPoints(data.frame(turistas[,lon],turistas[,lat]),  proj4string = CRS("+proj=longlat"))
 in.poly <- over(points, subagebmap)
@@ -84,8 +89,6 @@ ggplot(data = shape.fort, aes(x = long, y = lat)) +
   theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
   scale_fill_continuous(low = 'black', high =  'tomato')
 
-help(page.rank)
-
 ##### Agregando analisis de redes
 graph <- graph.data.frame(edges, directed = FALSE, vertices = agebs)
 pg.w <- page.rank(graph, weight = edges$count)
@@ -100,39 +103,74 @@ pesos <- data.table(ageb = names(pg.w$vector), pg.w = pg.w$vector, pg = pg$vecto
 shape.fort <- plyr:::join(shape.fort, pesos, by= 'ageb', type = 'left')
 shape.fort
 
-quartz()
+#quartz()
 ggplot(data = shape.fort, aes(x = long, y = lat)) + 
   geom_polygon(aes(group = group, fill = pg)) +
   labs(title = "Pagerank", x = "", y = "") + theme + coord_equal() +
   theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
   scale_fill_continuous(low = 'black', high =  'tomato')
+  #geom_point(data = social, aes(x = lon, y = lat), alpha = .05, size = .4, color = 'white')
 
-quartz()
+#quartz()
 ggplot(data = shape.fort, aes(x = long, y = lat)) + 
   geom_polygon(aes(group = group, fill = pg.w)) +
   labs(title = "Pagerank ponderado", x = "", y = "") + theme + coord_equal() +
   theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
   scale_fill_continuous(low = 'black', high =  'tomato')
 
-quartz()
+#quartz()
 ggplot(data = shape.fort, aes(x = long, y = lat)) + 
   geom_polygon(aes(group = group, fill = bt)) +
   labs(title = "Betweenness", x = "", y = "") + theme + coord_equal() +
   theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
   scale_fill_continuous(low = 'black', high =  'tomato')
 
-quartz()
+#quartz()
 ggplot(data = shape.fort, aes(x = long, y = lat)) + 
   geom_polygon(aes(group = group, fill = bt.w)) +
   labs(title = "Betweenness ponderado", x = "", y = "") + theme + coord_equal() +
   theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
   scale_fill_continuous(low = 'black', high =  'tomato')
 
-quartz()
-ggplot(data = shape.fort, aes(x = long, y = lat)) + 
-  geom_polygon(aes(group = group, fill = abs(eig))) +
-  labs(title = "Eigenvalor", x = "", y = "") + theme + coord_equal() +
-  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
-  scale_fill_continuous(low = 'black', high =  'tomato')
-
 # write.graph(graph, file = '/Users/alfredogarbuno/Desktop/export_02.gml', format = 'gml')
+setnames(edges, c('node1', 'node2', 'count'))
+setnames(edges, c('node1'), c('ageb'))
+edges <- plyr:::join(edges, agebs, by= 'ageb')
+edges$id <- NULL
+setnames(edges, c('ageb', 'node2', 'long', 'lat'), c('node1', 'ageb', 'long.1', 'lat.1'))
+edges <- plyr:::join(edges, agebs, by= 'ageb')
+setnames(edges, c('ageb', 'long', 'lat'), c('node2', 'long.2', 'lat.2'))
+edges$id <- NULL
+setnames(edges, c('node1', 'node2', 'count', 'long.1', 'lat.1','count.1', 'long.2', 'lat.2', 'count.2'))
+
+theme <- theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), 
+               axis.title.x = element_blank(), axis.title.y = element_blank(), 
+               axis.text.x = element_blank(), axis.text.y = element_blank(),
+               legend.position = "none")
+#quartz()
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group), fill = 'black') +
+  labs(title = "Zapopan", x = "", y = "") + theme + coord_equal() + 
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  geom_segment(data = edges, aes(x = long.1, y = lat.1, xend = long.2, yend = lat.2, color = node1), alpha = .1)
+
+#quartz()
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group), fill = 'black') +
+  labs(title = "Zapopan", x = "", y = "") + theme + coord_equal() + 
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  stat_density2d(data = tur, aes(x = lon, y = lat, fill = ..level..,
+        alpha = ..level..), bins = 10,
+    geom = "polygon") +
+  scale_fill_gradient(low = "white", high= "green") 
+
+#quartz()
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group), fill = 'black') +
+  labs(title = "Zapopan", x = "", y = "") + theme + coord_equal() + 
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  stat_density2d(data = tur, aes(x = lon, y = lat, fill = ..level..,
+                                 alpha = ..level..), bins = 10,
+                 geom = "polygon") +
+  scale_fill_gradient(low = "white", high= "green") +
+  facet_wrap(~day, ncol = 4)

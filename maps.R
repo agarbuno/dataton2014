@@ -64,8 +64,8 @@ submap <- subset(map, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039))
 map.2 <- conv_sp_lines_to_seg(submap)
 
 streets <- geom_segment2(data=map.2, 
-                         aes(xend=elon, yend=elat), 
                          size=.25, 
+                         aes(xend=elon, yend=elat), 
                          color="black")
 
 #shape.fort <- fortify(submap) 
