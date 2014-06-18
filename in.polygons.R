@@ -1,41 +1,138 @@
-munmap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Municipios/jal_municipal.shp",
-                        verbose = TRUE, proj4string = CRS("+proj=longlat"))
+library(data.table)
+library(igraph)
+library(reshape2)
 
-colmap <- readShapePoly("/Users/alfredogarbuno/dataton/colonias/Colonias.shp",
-                        verbose = TRUE, proj4string = CRS("+proj=longlat"))
-
-locmap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Localidad/jal_loc_urb.shp",
-                        verbose = TRUE, proj4string = CRS("+proj=longlat"))
+# munmap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Municipios/jal_municipal.shp",
+#                         verbose = TRUE, proj4string = CRS("+proj=longlat"))
+# 
+# colmap <- readShapePoly("/Users/alfredogarbuno/dataton/colonias/Colonias.shp",
+#                         verbose = TRUE, proj4string = CRS("+proj=longlat"))
+# 
+# locmap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Localidad/jal_loc_urb.shp",
+#                         verbose = TRUE, proj4string = CRS("+proj=longlat"))
 
 agebmap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Ageb/jal_ageb_urb.shp",
-                        verbose = TRUE, proj4string = CRS("+proj=longlat"))
-
-manmap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Manzana/jal_manzanas.shp",
                          verbose = TRUE, proj4string = CRS("+proj=longlat"))
 
-subagebmap <- subset(agebmap, substr(CVEGEO,1,5) %in% c(14120))
-subcolmap <- subset(colmap, MUN_NAME == 'ZAPOPAN')
+# manmap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Manzana/jal_manzanas.shp",
+#                         verbose = TRUE, proj4string = CRS("+proj=longlat"))
 
-View(colmap@data)
+# sublocmap <- subset(locmap, substr(CVEGEO,1,5) %in% c(14120))
+# submanmap <- subset(manmap, substr(CVEGEO,1,5) %in% c(14120))
+# subcolmap <- subset(colmap, MUN_NAME == 'ZAPOPAN')
 
-
-shape.fort <- fortify(subagebmap) 
-shape.fort <- shape.fort[order(shape.fort$order), ] 
-
-View(subagebmap@data)
-
-quartz()
+subagebmap <- subset(agebmap, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039, 14097))
 
 ggplot(data = shape.fort, aes(x = long, y = lat)) + 
   geom_polygon(aes(group = group), colour='black', fill='white') +
   labs(title = "Zapopan", x = "", y = "") 
-  
-geom_point(data = social, aes(x = lon, y = lat, color = social), size = .5)
+#  geom_text(data=centroids, aes(x = long, y = lat, label=id), inherit.aes=FALSE, size = 2.7)
+#geom_point(data = social, aes(x = lon, y = lat, color = social), size = .5)
 
+#submap <- subset(munmap, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039, 14097))
 
-submap <- subset(munmap, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039, 14097))
-points <- SpatialPoints(data.frame(social[,lon],social[,lat]),  proj4string = CRS("+proj=longlat"))
-in.poly <- over(points, submap)
+##### Esto es para ver los poligonos y los vecinos
+shape.fort <- fortify(subagebmap) 
+shape.fort <- shape.fort[order(shape.fort$order), ] 
+# aux <- turistas
+# turistas <- social 
+turistas <- aux
 
-colonias <- read.csv('/Users/alfredogarbuno/dataton/zapopan/Colonias.csv', sep = ',')
-eventos <- read.csv('/Users/alfredogarbuno/dataton/zapopan/Eventos.csv', sep = ',')
+points <- SpatialPoints(data.frame(turistas[,lon],turistas[,lat]),  proj4string = CRS("+proj=longlat"))
+in.poly <- over(points, subagebmap)
+in.poly <- in.poly$CVEGEO
+
+turistas$ageb <- in.poly
+turistas <- data.frame(turistas)
+tur <- data.table(turistas[!is.na(turistas$ageb),])
+
+factors <- levels(factor(subagebmap@data$CVEGEO))
+tur$ageb <- as.character(tur$ageb)
+tur <- tur[order(user)]
+
+#subtur <- tur[seq(1:1000),]
+#ddply(subtur, .(user), summarise, len = length(levels(factor(ageb))))
+
+res <- data.table(ddply(tur, .(user), function(data) { 
+  expand.grid( levels(factor(data$ageb)), levels(factor(data$ageb)))
+  }, .parallel = TRUE))
+res <- subset(res, as.character(Var1) <= as.character(Var2))
+res <- res[order(user)]
+edges <- res[, list(count = .N), by = list(Var1,Var2)]
+
+shape.fort <- data.table(shape.fort)
+centroids <- shape.fort[, data.table(kmeans(cbind(long,lat),centers=1)$centers) , by=id]
+centroids
+agebs <- data.frame(ageb = subagebmap@data$CVEGEO, id = subagebmap@data$OID-1)
+agebs <- plyr:::join(centroids, agebs, by= 'id')
+pesos <- tur[, list(count = .N), by = ageb]
+agebs <- plyr:::join(agebs, pesos, by= 'ageb', type = 'left')
+agebs[is.na(agebs)] <- 0
+agebs
+setcolorder(agebs, c('ageb', 'long', 'lat', 'id', 'count'))
+
+shape.fort <- plyr:::join(shape.fort, agebs, by= 'id', type = 'left')
+
+theme <- theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), 
+         axis.title.x = element_blank(), axis.title.y = element_blank(), 
+         axis.text.x = element_blank(), axis.text.y = element_blank()
+         )
+
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group, fill = count)) +
+  labs(title = "", x = "", y = "") + theme + coord_equal() +
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  scale_fill_continuous(low = 'black', high =  'tomato')
+
+help(page.rank)
+
+##### Agregando analisis de redes
+graph <- graph.data.frame(edges, directed = FALSE, vertices = agebs)
+pg.w <- page.rank(graph, weight = edges$count)
+pg <- page.rank(graph)
+
+bt <- betweenness(graph)
+bt.w <- betweenness(graph, weight = edges$count)
+
+eig <- alpha.centrality(graph)
+
+pesos <- data.table(ageb = names(pg.w$vector), pg.w = pg.w$vector, pg = pg$vector, bt, bt.w, eig)
+shape.fort <- plyr:::join(shape.fort, pesos, by= 'ageb', type = 'left')
+shape.fort
+
+quartz()
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group, fill = pg)) +
+  labs(title = "Pagerank", x = "", y = "") + theme + coord_equal() +
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  scale_fill_continuous(low = 'black', high =  'tomato')
+
+quartz()
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group, fill = pg.w)) +
+  labs(title = "Pagerank ponderado", x = "", y = "") + theme + coord_equal() +
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  scale_fill_continuous(low = 'black', high =  'tomato')
+
+quartz()
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group, fill = bt)) +
+  labs(title = "Betweenness", x = "", y = "") + theme + coord_equal() +
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  scale_fill_continuous(low = 'black', high =  'tomato')
+
+quartz()
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group, fill = bt.w)) +
+  labs(title = "Betweenness ponderado", x = "", y = "") + theme + coord_equal() +
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  scale_fill_continuous(low = 'black', high =  'tomato')
+
+quartz()
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group, fill = abs(eig))) +
+  labs(title = "Eigenvalor", x = "", y = "") + theme + coord_equal() +
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  scale_fill_continuous(low = 'black', high =  'tomato')
+
+# write.graph(graph, file = '/Users/alfredogarbuno/Desktop/export_02.gml', format = 'gml')
