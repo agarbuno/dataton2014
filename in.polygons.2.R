@@ -376,6 +376,6 @@ ggplot(data = shape.fort, aes(x = long, y = lat)) +
   geom_segment(
     aes(x = startLon, y = startLat, xend = endLon, yend = endLat, group = id),
     alpha = .1, data = routes, color = 'tomato') +
-  geom_point(data = crosses, aes(x = lon, y = lat, size = bt.w/max(bt.w) * 10, alpha = bt.w/max(bt.w)
+  geom_point(data = crosses, aes(x = lon, y = lat, size = bt.w/max(bt.w) * 10, alpha = bt.w/max(bt.w) + 0.2
                                  , colour = bt.w/max(bt.w))) +
   scale_colour_gradient2(low = "white", high= "darkslategray1")
