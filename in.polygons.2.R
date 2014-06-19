@@ -246,7 +246,7 @@ subedges <- subset(edges, node1 != node2)
 #   counter <- counter + 1
 # }
 routeQueryCheck()
-routes
+routes <- fread('~/dataton/routes.csv', sep = ',')
 # 
 
 # routes <- ddply(subsubedges, .(id),  function(data){ 
@@ -256,8 +256,6 @@ routes
 #   }, .progress = 'text')
 
 #write.csv(routes, '~/Dropbox/Dataton/routes2.csv', row.names = FALSE)
-routes <- data.table(routes)
-routes
 
 ggplot(data = shape.fort, aes(x = long, y = lat)) + 
   geom_polygon(aes(group = group), fill = 'black') +
@@ -269,7 +267,7 @@ ggplot(data = shape.fort, aes(x = long, y = lat)) +
 
 map <- readShapeLines("~/dataton/inegi/Vialidades/jal_eje_vial.shp",
                       verbose = TRUE, proj4string = CRS("+proj=longlat"))
-submap <- subset(map, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039))
+submap <- subset(map, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039, 14097))
 map.2 <- conv_sp_lines_to_seg(submap)
 streets <- geom_segment2(data=map.2, 
                          size=.25, 
@@ -301,15 +299,83 @@ ggplot(data = shape.fort, aes(x = long, y = lat)) +
 crosses$from <- paste(crosses$startLon, crosses$startLat, sep = '-')
 crosses$to <- paste(crosses$endLon, crosses$endLat, sep = '-')
 setcolorder(crosses, c("from", "to","startLon", "startLat", "endLon", "endLat", "count", "km", "time"))
+
+crosses
+
 crosses.edges <- crosses
-cx.1 <- data.table( node = crosses$from, lon = crosses$startLon, lat = crosses$startLat)
-cx.2 <- data.table( node = crosses$to, lon = crosses$endLon, lat = crosses$endLat)
+cx.1 <- data.table( node = crosses$from, lon = crosses$startLon, lat = crosses$startLat, count = crosses$count)
+cx.2 <- data.table( node = crosses$to, lon = crosses$endLon, lat = crosses$endLat, count = crosses$count)
 crosses <- rbind(cx.1, cx.2)
-crosses <- crosses[, list( count = .N), by = list(node, lon, lat)]
+crosses <- crosses[, list( refs = sum(count), count = .N ), by = list(node, lon, lat)]
 rm(cx.1, cx.2)
 
 graph.inter <- graph.data.frame(crosses.edges, directed = TRUE, vertices = crosses)
 crosses.edges <- crosses.edges[, list(from, to, count, km, time)]
 
+crosses
 
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group), fill = 'black') +
+  labs(title = "Zapopan", x = "", y = "") + theme + coord_equal() + 
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  geom_segment(
+    aes(x = startLon, y = startLat, xend = endLon, yend = endLat, group = id, color = factor(id)),
+    alpha = .1, data = routes) +
+  geom_point(data = crosses, aes(x = lon, y = lat, size = refs), color = 'white', alpha = .4)
 
+pg.w <- page.rank(graph.inter, weight = crosses.edges$count, directed = TRUE)
+pg <- page.rank(graph.inter, directed = TRUE)
+
+bt <- betweenness(graph.inter, directed = TRUE)
+bt.w <- betweenness(graph.inter, weight = crosses.edges$count, directed = TRUE)
+
+crosses$pg.w <- pg.w$vector
+crosses$pg <- pg$vector
+crosses$bt <- bt
+crosses$bt.w <- bt.w
+
+rm(pg.w, pg, bt, bt.w)
+
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group), fill = 'black') +
+  labs(title = "Zapopan", x = "", y = "") + coord_equal() + theme + 
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  geom_segment(
+    aes(x = startLon, y = startLat, xend = endLon, yend = endLat, group = id),
+    alpha = .1, data = routes, color = 'tomato') +
+  geom_point(data = crosses, aes(x = lon, y = lat, size = pg.w/max(pg.w) * 10, alpha = pg.w/max(pg.w)
+                                 , colour = pg.w/max(pg.w))) +
+  scale_colour_gradient2(low = "white", high= "darkslategray1")
+  
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group), fill = 'black') +
+  labs(title = "Zapopan", x = "", y = "") + coord_equal() + theme + 
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  geom_segment(
+    aes(x = startLon, y = startLat, xend = endLon, yend = endLat, group = id),
+    alpha = .1, data = routes, color = 'tomato') +
+  geom_point(data = crosses, aes(x = lon, y = lat, size = pg/max(pg) * 10, alpha = pg/max(pg)
+                                 , colour = pg/max(pg))) +
+  scale_colour_gradient2(low = "white", high= "darkslategray1")
+
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group), fill = 'black') +
+  labs(title = "Zapopan", x = "", y = "") + coord_equal() + theme + 
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  geom_segment(
+    aes(x = startLon, y = startLat, xend = endLon, yend = endLat, group = id),
+    alpha = .1, data = routes, color = 'tomato') +
+  geom_point(data = crosses, aes(x = lon, y = lat, size = bt/max(bt) * 10, alpha = bt/max(bt)
+                                 , colour = bt/max(bt))) +
+  scale_colour_gradient2(low = "white", high= "darkslategray1")
+
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group), fill = 'black') +
+  labs(title = "Zapopan", x = "", y = "") + coord_equal() + theme + 
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  geom_segment(
+    aes(x = startLon, y = startLat, xend = endLon, yend = endLat, group = id),
+    alpha = .1, data = routes, color = 'tomato') +
+  geom_point(data = crosses, aes(x = lon, y = lat, size = bt.w/max(bt.w) * 10, alpha = bt.w/max(bt.w)
+                                 , colour = bt.w/max(bt.w))) +
+  scale_colour_gradient2(low = "white", high= "darkslategray1")
