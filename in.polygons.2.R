@@ -314,3 +314,5 @@ rm(cx.1, cx.2)
 graph.inter <- graph.data.frame(crosses.edges, directed = TRUE, vertices = crosses)
 crosses.edges <- crosses.edges[, list(from, to, count, km, time)]
 
+
+
