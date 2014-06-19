@@ -1,3 +1,12 @@
+#install.packages(c('gstat', 'MASS', 'RColorBrewer', 'classInt', 'ggplot2', 'dplyr', 'maptools', 'maps', 'SpatialEpi', 'fields', 'rgdal', 'proto', 'sp', 'ggmaps'))
+
+# Instalar en ubuntu la dependencia libgeos-dev, libgdal-dev
+# sudo apt-get install libgdal1-dev libproj-dev 
+
+#install.packages('gstat')
+#install.packages('rgdal')
+#install.packages('png')
+
 library(gstat)
 library(MASS)
 library(RColorBrewer)

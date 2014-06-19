@@ -1,3 +1,6 @@
+#install.packages(c('igraph', 'reshape2'))
+#install.packages('ggmap')
+
 library(data.table)
 library(ggmap)
 library(igraph)
@@ -14,7 +17,7 @@ library(reshape2)
 # locmap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Localidad/jal_loc_urb.shp",
 #                         verbose = TRUE, proj4string = CRS("+proj=longlat"))
 
-agebmap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Ageb/jal_ageb_urb.shp",
+agebmap <- readShapePoly("~/dataton/inegi/Ageb/jal_ageb_urb.shp",
                          verbose = TRUE, proj4string = CRS("+proj=longlat"))
 
 # manmap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Manzana/jal_manzanas.shp",
@@ -33,7 +36,7 @@ ggplot(data = shape.fort, aes(x = long, y = lat)) +
   geom_polygon(aes(group = group), colour='black', fill='white') +
   labs(title = "Zapopan", x = "", y = "") 
 #  geom_text(data=centroids, aes(x = long, y = lat, label=id), inherit.aes=FALSE, size = 2.7)
-#geom_point(data = social, aes(x = lon, y = lat, color = social), size = .5)
+#  geom_point(data = social, aes(x = lon, y = lat, color = social), size = .5)
 
 #submap <- subset(munmap, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039, 14097))
 
@@ -221,22 +224,15 @@ deg_to_dms<- function (degfloat){
 
 edges$from <- paste(deg_to_dms(edges$lat.1), deg_to_dms(edges$long.1), sep = ',')
 edges$to <- paste(deg_to_dms(edges$lat.2), deg_to_dms(edges$long.2), sep = ',')
-edges$from[7695]
-
-df <- route(from = edges$from[7695], to = edges$to[7695], alternatives = FALSE)
-df
 
 edges$id <- seq(1,nrow(edges))
-str(subsubedges)
 
 subedges <- subset(edges, node1 != node2)
-df <- route(from = subedges[11,]$from, to = subedges[11,]$to, alternatives = FALSE)
-df
 
-# routes <- data.frame()
-# counter <- 1
+#routes <- data.frame()
+#counter <- 1
 # routeQueryCheck()
-# for (i in 2396:2400){
+# for (i in 2522:3499){
 #   data <- subedges[i,]
 #   df <- route(from = data$from, to = data$to, alternatives = FALSE)
 #   df <- df[, c('startLon', 'startLat', 'endLon', 'endLat', 'km', 'minutes')]
@@ -249,8 +245,8 @@ df
 #   }
 #   counter <- counter + 1
 # }
-# routeQueryCheck()
-# routes
+routeQueryCheck()
+routes
 # 
 
 # routes <- ddply(subsubedges, .(id),  function(data){ 
@@ -259,6 +255,7 @@ df
 #   df
 #   }, .progress = 'text')
 
+#write.csv(routes, '~/Dropbox/Dataton/routes2.csv', row.names = FALSE)
 routes <- data.table(routes)
 routes
 
@@ -270,7 +267,7 @@ ggplot(data = shape.fort, aes(x = long, y = lat)) +
     aes(x = startLon, y = startLat, xend = endLon, yend = endLat, group = id),
     alpha = .1, data = routes, color = 'darkslategray1')
 
-map <- readShapeLines("/Users/alfredogarbuno/dataton/inegi/Vialidades/jal_eje_vial.shp",
+map <- readShapeLines("~/dataton/inegi/Vialidades/jal_eje_vial.shp",
                       verbose = TRUE, proj4string = CRS("+proj=longlat"))
 submap <- subset(map, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039))
 map.2 <- conv_sp_lines_to_seg(submap)

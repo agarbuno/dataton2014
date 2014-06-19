@@ -1,3 +1,5 @@
+#install.packages(c('data.table', 'lubridate', 'plyr', 'doParallel'))
+
 library(data.table)
 library(lubridate)
 library(plyr)
@@ -5,8 +7,8 @@ library(plyr)
 library(doParallel)
 registerDoParallel(cores=detectCores())
 
-twitter <- read.csv('/Users/alfredogarbuno/dataton/redes-sociales/Twitter.csv', sep = ',')
-foursq <- read.csv('/Users/alfredogarbuno/dataton/redes-sociales/Foursquare.csv', sep = ',')
+twitter <- read.csv('~/dataton/redes-sociales/Twitter.csv', sep = ',')
+foursq <- read.csv('~/dataton/redes-sociales/Foursquare.csv', sep = ',')
 
 twitter[,4] <- NULL
 foursq[,4]  <- NULL
@@ -48,3 +50,4 @@ turistas <- subset(social, user %in% users$user)
 #res <- ddply(social, 'user', summarise, mean = mean(time))
 
 rm(time)
+
