@@ -58,7 +58,6 @@ tur <- tur[order(user)]
 
 tur.2 <- tur
 tur.2$id <- paste(tur[,date], tur[,hour], tur[,ageb], sep = '|')
-tur.3 <- tur.2[seq(1:100),]
 
 #subtur <- tur[seq(1:1000),]
 #ddply(subtur, .(user), summarise, len = length(levels(factor(ageb))))
@@ -233,26 +232,26 @@ str(subsubedges)
 subedges <- subset(edges, node1 != node2)
 df <- route(from = subedges[11,]$from, to = subedges[11,]$to, alternatives = FALSE)
 df
-subsubedges <- subedges[seq(1,100),]
 
-routes <- data.frame()
-counter <- 1
-routeQueryCheck()
-for (i in 54:2400){
-  data <- subedges[i,]
-  df <- route(from = data$from, to = data$to, alternatives = FALSE)
-  df <- df[, c('startLon', 'startLat', 'endLon', 'endLat', 'km', 'minutes')]
-  df$id <- data$id
-  routes <- rbind(routes, df)
-  cat('Paso: ', i)
-  if (counter == 9){
-    Sys.sleep(3)
-    counter <- 0
-  }
-  counter <- counter + 1
-}
-routeQueryCheck()
-routes
+# routes <- data.frame()
+# counter <- 1
+# routeQueryCheck()
+# for (i in 2396:2400){
+#   data <- subedges[i,]
+#   df <- route(from = data$from, to = data$to, alternatives = FALSE)
+#   df <- df[, c('startLon', 'startLat', 'endLon', 'endLat', 'km', 'minutes')]
+#   df$id <- data$id
+#   routes <- rbind(routes, df)
+#   cat('Paso: ', i)
+#   if (counter == 9){
+#     Sys.sleep(3)
+#     counter <- 0
+#   }
+#   counter <- counter + 1
+# }
+# routeQueryCheck()
+# routes
+# 
 
 # routes <- ddply(subsubedges, .(id),  function(data){ 
 #   df <- route(from = data$from, to = data$to, alternatives = FALSE)
@@ -261,11 +260,57 @@ routes
 #   }, .progress = 'text')
 
 routes <- data.table(routes)
+routes
 
 ggplot(data = shape.fort, aes(x = long, y = lat)) + 
   geom_polygon(aes(group = group), fill = 'black') +
   labs(title = "Zapopan", x = "", y = "") + theme + coord_equal() + 
   theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
   geom_segment(
-    aes(x = startLon, y = startLat, xend = endLon, yend = endLat),
-    alpha = .2, data = df, color = 'yellow')
+    aes(x = startLon, y = startLat, xend = endLon, yend = endLat, group = id),
+    alpha = .1, data = routes, color = 'darkslategray1')
+
+map <- readShapeLines("/Users/alfredogarbuno/dataton/inegi/Vialidades/jal_eje_vial.shp",
+                      verbose = TRUE, proj4string = CRS("+proj=longlat"))
+submap <- subset(map, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039))
+map.2 <- conv_sp_lines_to_seg(submap)
+streets <- geom_segment2(data=map.2, 
+                         size=.25, 
+                         aes(x=slon,y=slat,xend=elon, yend=elat), 
+                         color="white")
+
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group), fill = 'black') +
+  labs(title = "Zapopan", x = "", y = "") + theme + coord_equal() + 
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  streets +
+  geom_segment(
+    aes(x = startLon, y = startLat, xend = endLon, yend = endLat, group = id),
+    alpha = .1, data = routes, color = 'tomato')
+  
+rm(map, submap, map.2, streets)
+
+crosses <- routes[, list( count= .N, km = mean(km), time = mean(minutes)), by = list(startLon, startLat, endLon, endLat)]
+
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group), fill = 'black') +
+  labs(title = "Zapopan", x = "", y = "") + theme + coord_equal() + 
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  geom_segment(
+    aes(x = startLon, y = startLat, xend = endLon, yend = endLat, group = id),
+    alpha = .1, data = routes, color = 'tomato') +
+  geom_point(data = crosses, aes(x = startLon, y = startLat, size = count), color = 'white', alpha = .4)
+
+crosses$from <- paste(crosses$startLon, crosses$startLat, sep = '-')
+crosses$to <- paste(crosses$endLon, crosses$endLat, sep = '-')
+setcolorder(crosses, c("from", "to","startLon", "startLat", "endLon", "endLat", "count", "km", "time"))
+crosses.edges <- crosses
+cx.1 <- data.table( node = crosses$from, lon = crosses$startLon, lat = crosses$startLat)
+cx.2 <- data.table( node = crosses$to, lon = crosses$endLon, lat = crosses$endLat)
+crosses <- rbind(cx.1, cx.2)
+crosses <- crosses[, list( count = .N), by = list(node, lon, lat)]
+rm(cx.1, cx.2)
+
+graph.inter <- graph.data.frame(crosses.edges, directed = TRUE, vertices = crosses)
+crosses.edges <- crosses.edges[, list(from, to, count, km, time)]
+
