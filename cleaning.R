@@ -1,8 +1,10 @@
 #install.packages(c('data.table', 'lubridate', 'plyr', 'doParallel'))
+#install.packages('stringi')
 
 library(data.table)
 library(lubridate)
 library(plyr)
+library(stringi)
 
 library(doParallel)
 registerDoParallel(cores=detectCores())
@@ -51,3 +53,26 @@ turistas <- subset(social, user %in% users$user)
 
 rm(time)
 
+# Codigo no utilizado para tratamientos de texto en foursquare.... no utilizado
+
+# foursq <- read.csv('~/dataton/redes-sociales/Foursquare.csv', sep = ',', encoding = 'UTF-8')
+# foursq <- data.table(foursq)
+# setnames(foursq, names(foursq), c('timestamp', 'lat', 'lon', 'text', 'user'))
+# 
+# fsq <- subset(foursq, user %in% users$user)
+# fsq$text <- as.character(fsq$text)
+# fsq$id <- seq(1,nrow(fsq))
+# 
+# fsq <- fsq[, list(id, user, text)]
+# #write.csv(fsq, '~/dataton/redes-sociales/fsq.csv', sep = '|', row.names = FALSE)
+# 
+# fsq.clean <- read.csv('~/dataton/redes-sociales/fsq-clean.csv', header = FALSE, sep = ',')
+# fsq.clean <- data.table(fsq.clean)
+# setnames(fsq.clean, c('id', 'user', 'venue'))
+# fsq.clean <- fsq.clean[order(id)]
+# fsq.clean$venue <- sub("\"", "", fsq.clean$venue)
+# fsq.clean$venue <- sub("\"", "", fsq.clean$venue)
+# fsq.clean <- unique(fsq.clean)
+# 
+# tmp <- fsq.clean[, list(count = .N), by = id]
+# tmp <- subset(tmp, count > 1)

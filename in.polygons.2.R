@@ -283,6 +283,8 @@ ggplot(data = shape.fort, aes(x = long, y = lat)) +
     aes(x = startLon, y = startLat, xend = endLon, yend = endLat, group = id),
     alpha = .1, data = routes, color = 'tomato')
   
+routes
+
 rm(map, submap, map.2, streets)
 
 crosses <- routes[, list( count= .N, km = mean(km), time = mean(minutes)), by = list(startLon, startLat, endLon, endLat)]
@@ -379,3 +381,6 @@ ggplot(data = shape.fort, aes(x = long, y = lat)) +
   geom_point(data = crosses, aes(x = lon, y = lat, size = bt.w/max(bt.w) * 10, alpha = bt.w/max(bt.w) + 0.2
                                  , colour = bt.w/max(bt.w))) +
   scale_colour_gradient2(low = "white", high= "darkslategray1")
+
+#save.image('~/dataton/session1.Rdata')
+#load('~/dataton/session1.Rdata')
