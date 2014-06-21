@@ -10,8 +10,7 @@ mun.fort <- fortify(submunmap)
 
 theme <- theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(), 
                axis.title.x = element_blank(), axis.title.y = element_blank(), 
-               axis.text.x = element_blank(), axis.text.y = element_blank(),
-               legend.position = "none")
+               axis.text.x = element_blank(), axis.text.y = element_blank())
 
 agebmap <- readShapePoly("~/dataton/inegi/Ageb/jal_ageb_urb.shp",
                          verbose = TRUE, proj4string = CRS("+proj=longlat"))
