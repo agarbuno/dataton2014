@@ -102,9 +102,9 @@ ggplot(data = shape.ageb, aes(x = long, y = lat)) +
 
 servpoints <- readShapePoints("/Users/alfredogarbuno/dataton/inegi/Servicios/jal_servicios_p.shp",
                             verbose = TRUE, proj4string = CRS("+proj=longlat"))
-
-table(servpoints@data$GEOGRAFICO)
-
+head(servpoints@data)
+subservpoints <- subset(servpoints, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039, 14097))
+table(subservpoints@data$GEOGRAFICO)
 
 # pruebas <- readShapePoints("/Users/alfredogarbuno/dataton/inegi/Topografia/cultura/sitios arqueologicos/rasgo_arqueologico-p.shp",
 #                               verbose = TRUE, proj4string = CRS("+proj=longlat"))

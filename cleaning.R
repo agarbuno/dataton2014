@@ -53,7 +53,7 @@ turistas <- subset(social, user %in% users$user)
 
 rm(time)
 
-# Codigo no utilizado para tratamientos de texto en foursquare.... no utilizado
+# Codigo para tratamientos de texto en foursquare.... no utilizado
 
 # foursq <- read.csv('~/dataton/redes-sociales/Foursquare.csv', sep = ',', encoding = 'UTF-8')
 # foursq <- data.table(foursq)
