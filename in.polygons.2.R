@@ -1,11 +1,7 @@
 #install.packages(c('igraph', 'reshape2'))
 #install.packages('ggmap')
 
-library(data.table)
-library(ggmap)
-library(igraph)
-library(reshape2)
-
+# Referencia de mapas con lineas de transporte:
 # http://spatial.ly/2012/02/great-maps-ggplot2/
 
 # munmap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Municipios/jal_municipal.shp",
@@ -24,10 +20,13 @@ agebmap <- readShapePoly("~/dataton/inegi/Ageb/jal_ageb_urb.shp",
 #                         verbose = TRUE, proj4string = CRS("+proj=longlat"))
 
 # sublocmap <- subset(locmap, substr(CVEGEO,1,5) %in% c(14120))
-# submanmap <- subset(manmap, substr(CVEGEO,1,5) %in% c(14120))
+submanmap <- subset(manmap, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039, 14097))
 # subcolmap <- subset(colmap, MUN_NAME == 'ZAPOPAN')
 
+View(submanmap@data)
+
 subagebmap <- subset(agebmap, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039, 14097))
+View(subagebmap@data) 
 
 shape.fort <- fortify(subagebmap) 
 shape.fort <- shape.fort[order(shape.fort$order), ] 

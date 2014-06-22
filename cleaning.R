@@ -1,13 +1,4 @@
 #install.packages(c('data.table', 'lubridate', 'plyr', 'doParallel'))
-#install.packages('stringi')
-
-library(data.table)
-library(lubridate)
-library(plyr)
-library(stringi)
-
-library(doParallel)
-registerDoParallel(cores=detectCores())
 
 twitter <- read.csv('~/dataton/redes-sociales/Twitter.csv', sep = ',')
 foursq <- read.csv('~/dataton/redes-sociales/Foursquare.csv', sep = ',')

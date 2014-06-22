@@ -17,7 +17,7 @@ shape.ageb <- shape.ageb[order(shape.ageb$order), ]
 
 ##### Lectura y construccion de puntos de interés #####
 
-# Lineas de tren metropolitano
+##### Lineas de tren metropolitano #####
 serviciosmap <- readShapeLines("/Users/alfredogarbuno/dataton/inegi/Servicios/jal_servicios_l.shp",
                                verbose = TRUE, proj4string = CRS("+proj=longlat"))
 subtrenmap <- subset(serviciosmap, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039, 14097) &
@@ -29,7 +29,7 @@ metrolines <- geom_segment2(data=subtrenlines,
                            color='gold', 
                            alpha = .3)
 
-# Poligonos y centroides de Areas verdes, plazas y templos
+##### Poligonos y centroides de Areas verdes, plazas y templos ####
 servpolmap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Servicios/jal_servicios_a.shp",
                             verbose = TRUE, proj4string = CRS("+proj=longlat"))
 subservpol <- subset(servpolmap, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039, 14097))
@@ -59,7 +59,7 @@ ggplot(data = shape.ageb, aes(x = long, y = lat)) +
   geom_polygon(data = shape.serv, aes(x = long, y = lat, group = group, colour = GEOGRAFICO, fill = GEOGRAFICO)) +
   geom_point(data = serv.points, aes(x = long, y = lat, colour = GEOGRAFICO), size = 5, alpha = .3)
 
-# Puntos de servicios
+##### Puntos de servicios #####
 servpoints <- readShapePoints("/Users/alfredogarbuno/dataton/inegi/Servicios/jal_servicios_p.shp",
                               verbose = TRUE, proj4string = CRS("+proj=longlat"))
 subservpoints <- subset(servpoints, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039, 14097))
@@ -80,17 +80,16 @@ ggplot(data = shape.ageb, aes(x = long, y = lat)) +
   geom_polygon(data = shape.serv, aes(x = long, y = lat, group = group, colour = GEOGRAFICO, fill = GEOGRAFICO)) +
   geom_point(data = sub.points, aes(x = long, y = lat, colour = GEOGRAFICO), size = 5, alpha = .3)
 
-
 ##### Lectura y construccion de cuerpos de agua y ríos ####
 
-# Cuerpos de agua
+##### Cuerpos de agua #####
 aguamap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Topografia/hidrografia/cuerpo de agua/cuerpo_de_agua_perenne.shp",
                          verbose = TRUE, proj4string = CRS("+proj=longlat"))
 subagua <- subset(aguamap, ESTADO == 14)
 shape.agua <- fortify(subagua) 
 shape.agua <- shape.agua[order(shape.agua$order), ] 
 
-# Rios
+##### Rios #####
 riversmap <- readShapeLines("/Users/alfredogarbuno/dataton/inegi/Topografia/hidrografia/corriente de agua/perenne.shp",
                           verbose = TRUE, proj4string = CRS("+proj=longlat"))
 subrivers <- subset(riversmap, ESTADO == 14)
