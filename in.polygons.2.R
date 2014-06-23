@@ -196,9 +196,7 @@ distQueryCheck()
 
 edges$from <- paste(deg_to_dms(edges$lat.1), deg_to_dms(edges$long.1), sep = ',')
 edges$to <- paste(deg_to_dms(edges$lat.2), deg_to_dms(edges$long.2), sep = ',')
-
 edges$id <- seq(1,nrow(edges))
-
 subedges <- subset(edges, node1 != node2)
 
 #routes <- data.frame()

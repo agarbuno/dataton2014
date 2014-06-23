@@ -33,6 +33,7 @@ metrolines <- geom_segment2(data=subtrenlines,
 servpolmap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Servicios/jal_servicios_a.shp",
                             verbose = TRUE, proj4string = CRS("+proj=longlat"))
 subservpol <- subset(servpolmap, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039, 14097))
+
 aux.dt <- data.table(subservpol@data)
 aux.dt <- aux.dt[, list(GEOGRAFICO, OID, TIPO)]
 aux.dt$OID <- aux.dt$OID - 1
@@ -49,6 +50,7 @@ shape.serv <- subset(shape.serv, GEOGRAFICO %in% c('Area Verde', 'Cuerpo de agua
 shape.serv <- data.table(shape.serv)
 serv.points <- shape.serv[, data.table(kmeans(cbind(long,lat),centers=1)$centers) , by=list(id, GEOGRAFICO)]
 serv.points$GEOGRAFICO <- factor(serv.points$GEOGRAFICO)
+serv.points
 
 #quartz()
 ggplot(data = shape.ageb, aes(x = long, y = lat)) + 
