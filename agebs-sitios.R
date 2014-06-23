@@ -73,3 +73,5 @@ ggplot(data = shape.fort, aes(x = long, y = lat)) +
   labs(title = "Zapopan", x = "", y = "") + coord_equal() + theme + 
   theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
   geom_point(data = interest, aes(x = long, y = lat, colour = GEOGRAFICO), size = 3, alpha = .3)
+
+#<save.image('~/dataton/session2.Rdata')
