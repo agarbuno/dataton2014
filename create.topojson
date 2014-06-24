@@ -7,3 +7,4 @@ ogr2ogr states.shp Entidades_2010_5.shp -t_srs "+proj=longlat +ellps=WGS84 +no_d
 topojson -o mx_states.json -s 1e-7 -q 1e5 states.shp -p state_code=+CVE_ENT,name=NOM_ENT --id-property NOM_ENT
 
 topojson -o agebs_zapo.json -s 1e-7 -q 1e5 agebs.shp -p state_code=+CVEGEO,name=CVEGEO --id-property CVEGEO
+topojson -o agebs_zapo.json -s 1e-18 -q 1e5 agebs.shp -p state_code=+CVEGEO,name=CVEGEO --id-property CVEGEO

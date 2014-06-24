@@ -29,9 +29,11 @@ d1 <- ichoropleth(count2 ~ ageb, data = subagebs, map = 'agebs_zapo', ncut = 9, 
 
 d1$set(
   geographyConfig = list(
-    dataUrl = "/Users/alfredogarbuno/dataton/shapefiles/agebs_zapo.json"
+    dataUrl = "/Users/alfredogarbuno/dataton/shapefiles/agebs_zapo2.json"
   ),
   scope = 'agebs',
+  width = 1600, 
+  height = 800,
   setProjection = '#! function( element, options ) {
    var projection, path;
    projection = d3.geo.mercator()
@@ -48,30 +50,7 @@ d1$set(geographyConfig = list(
   } !#" 
 ))
 
+
 d1$save('rMaps.html', cdn = TRUE)
-options(rcharts.cdn = TRUE)
-
-# ggplot(data = shape.fort, aes(x = long, y = lat)) + 
-#     geom_polygon(aes(group = group), fill = 'black') +
-#     labs(title = "Zapopan", x = "", y = "") + coord_equal() + 
-#     theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank())
-
-# fuente: http://ropensci.org/blog/2014/04/17/plotly/
-# library("devtools")
-# install_github("plotly", "ropensci")
-
-# library("plotly")
-# response <- signup("agarbuno", "alfredo.garbuno@gmail.com")
-# py <- plotly("RgraphingAPI", "izwc728prc")
-# 
-# load('~/dataton/session2.Rdata')
-# 
-# beau.plot <- ggplot(data = shape.fort, aes(x = long, y = lat)) + 
-#   geom_polygon(aes(group = group), fill = 'black') +
-#   labs(title = "Zapopan", x = "", y = "") + theme + coord_equal() + 
-#   theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
-#   geom_segment(
-#     aes(x = startLon, y = startLat, xend = endLon, yend = endLat, group = id),
-#     alpha = .1, data = routes, color = 'darkslategray1')
-# 
-# py$ggplotly(beau.plot)
+#options(rcharts.cdn = TRUE)
+#save.image('~/dataton/session3.Rdata')
