@@ -96,7 +96,9 @@ theme <- theme(panel.grid.minor = element_blank(), axis.ticks = element_blank(),
 
 ggplot(data = shape.fort, aes(x = long, y = lat)) + 
   geom_polygon(aes(group = group, fill = count) )+
-  labs(title = "", x = "", y = "") + theme + coord_equal() +
+  labs(title = "", x = "", y = "") + 
+  #theme + 
+  coord_equal() +
   theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
   scale_fill_continuous(low = 'black', high =  'tomato')
 

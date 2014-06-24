@@ -1,3 +1,5 @@
+#load('~/dataton/session2.Rdata')
+
 which.max(agebs$count)
 agebs[1082,]
 
