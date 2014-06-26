@@ -91,6 +91,6 @@ d1$set(bubbleConfig = list(
 ))
 
 
-d1$save('rMaps3.html', cdn = TRUE)
+d1$save('bubbles-pg.html', cdn = TRUE)
 #options(rcharts.cdn = TRUE)
 #save.image('~/dataton/session3.Rdata')

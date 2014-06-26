@@ -402,11 +402,13 @@ pg <- page.rank(graph.inter, directed = TRUE)
 
 bt <- betweenness(graph.inter, directed = TRUE)
 bt.w <- betweenness(graph.inter, weight = crosses.edges$count, directed = TRUE)
+bt.t <- betweenness(graph.inter, weight = 1/crosses.edges$km, directed = TRUE)
 
 crosses$pg.w <- pg.w$vector
 crosses$pg <- pg$vector
 crosses$bt <- bt
 crosses$bt.w <- bt.w
+crosses$bt.t <- bt.t
 
 rm(pg.w, pg, bt, bt.w)
 
@@ -441,6 +443,17 @@ ggplot(data = shape.fort, aes(x = long, y = lat)) +
     alpha = .1, data = routes, color = 'tomato') +
   geom_point(data = crosses, aes(x = lon, y = lat, size = bt/max(bt) * 10, alpha = bt/max(bt)
                                  , colour = bt/max(bt))) +
+  scale_colour_gradient2(low = "white", high= "darkslategray1")
+
+ggplot(data = shape.fort, aes(x = long, y = lat)) + 
+  geom_polygon(aes(group = group), fill = 'black') +
+  labs(title = "Zapopan", x = "", y = "") + coord_equal() + theme + 
+  theme(panel.background = element_rect(fill='gray50'), panel.grid.major = element_blank()) +
+  geom_segment(
+    aes(x = startLon, y = startLat, xend = endLon, yend = endLat, group = id),
+    alpha = .1, data = routes, color = 'tomato') +
+  geom_point(data = crosses, aes(x = lon, y = lat, size = bt.t/max(bt.t) * 10, alpha = bt.t/max(bt.t)
+                                 , colour = bt.t/max(bt.t))) +
   scale_colour_gradient2(low = "white", high= "darkslategray1")
 
 ggplot(data = shape.fort, aes(x = long, y = lat)) + 

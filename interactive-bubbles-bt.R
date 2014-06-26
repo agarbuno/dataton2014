@@ -11,7 +11,7 @@ library(rjson)
 library(RJSONIO)
 load('~/dataton/session2.Rdata')
 crosses$point <- paste(crosses[,lat], crosses[,lon])
-crosses$radius <- crosses$bt.w/max(crosses$bt.w) * 17
+crosses$radius <- log(crosses$bt.w/max(crosses$bt.w)+1)*30
 crosses$bt.w <- crosses$bt.w/max(crosses$bt.w) * 10
 crosses$longitude <- as.character(crosses$lon)
 crosses$latitude <- as.character(crosses$lat)

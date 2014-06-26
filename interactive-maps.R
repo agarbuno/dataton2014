@@ -14,6 +14,7 @@ agebs <- plyr:::join(agebs, ex, by = 'ageb', type = 'left')
 agebs[is.na(agebs)] <- 0
 setnames(agebs, c("Area Verde", "Deportivo o Recreativo", "Palacio Gobierno", "Centro médico"), c("AreasV", "Recreativos", "PalacioG", "CentroMed"))
 agebs <- data.frame(agebs)
+
 agebs$count2 <- agebs$count + runif(length(agebs$count))
 agebs$ageb <- as.character(agebs$ageb)
 
