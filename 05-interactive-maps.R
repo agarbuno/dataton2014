@@ -56,6 +56,6 @@ d1$set(geographyConfig = list(
 ))
 
 
-d1$save('ageb_map3.html', cdn = TRUE)
+d1$save('~/pruebas/ageb_map3.html', cdn = TRUE)
 #options(rcharts.cdn = TRUE)
 #save.image('~/dataton/session3.Rdata')
