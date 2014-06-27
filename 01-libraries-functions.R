@@ -1,9 +1,20 @@
+#####  Manejo de datos y rendimiento ####
+
+library(data.table)
+library(lubridate)
+library(plyr)
+library(reshape2)
+
+library(doParallel)
+registerDoParallel(cores=detectCores())
+
+##### Herramientas de geoestadistica ####
+
 library(gstat)
 library(MASS)
 library(RColorBrewer)
 library(classInt)
 library(ggplot2)
-library(plyr)
 library(maptools)
 library(maps)
 library(SpatialEpi)
@@ -11,6 +22,13 @@ library(fields)
 library(rgdal)
 library(proto)
 library(sp)
+library(ggmap)
+
+###### Análisis de redes #####
+
+library(igraph)
+
+###### Funciones #####
 
 conv_sp_lines_to_seg <- function(spLines) {
   library(plyr)
@@ -53,32 +71,25 @@ geom_segment2 <- function(mapping = NULL, data = NULL, stat = "identity",
                    position = position, arrow = arrow, ...)
 }
 
-munmap <- readShapePoly("/Users/alfredogarbuno/dataton/inegi/Municipios/jal_municipal.shp",
-                      verbose = TRUE, proj4string = CRS("+proj=longlat"))
-
-map <- readShapeLines("/Users/alfredogarbuno/dataton/inegi/Vialidades/jal_eje_vial.shp",
-                     verbose = TRUE, proj4string = CRS("+proj=longlat"))
-
-submap <- subset(map, substr(CVEGEO,1,5) %in% c(14120, 14098, 14039))
-
-map.2 <- conv_sp_lines_to_seg(submap)
-
-streets <- geom_segment2(data=map.2, 
-                         aes(xend=elon, yend=elat), 
-                         size=.25, 
-                         color="black")
-
-#shape.fort <- fortify(submap) 
-#shape.fort <- shape.fort[order(shape.fort$order), ] 
-
-ggplot(data = shape.fort, aes(x = long, y = lat)) + 
-  geom_polygon(aes(group = group), colour='black', fill='white') +
-  labs(title = "Zapopan", x = "", y = "") +
-  geom_point(data = social, aes(x = lon, y = lat, color = social), size = .5)
-
-image <- ggplot(map.2, aes(x=slon,y=slat)) + 
-  streets +
-  labs(title = "Zapopan", x = "", y = "") + coord_fixed() + 
-  geom_point(data = social, aes(x = lon, y = lat, color = social), size = .5)
-
-image
+deg_to_dms<- function (degfloat){
+  deg <- as.integer(degfloat)
+  minfloat <- abs(60*(degfloat - deg))
+  min <- as.integer(minfloat)
+  secfloat <- abs(60*(minfloat - min))
+  ### Round seconds to desired accuracy:
+  secfloat <- round(secfloat, digits=3 )
+  ### After rounding, the seconds might become 60
+  ### The following if-tests are not necessary if no 
+  ### rounding is done.
+  if (secfloat == 60) {
+    min <- min + 1
+    secfloat <- 0
+  }
+  if (min == 60){
+    deg <- deg + 1
+    min <- 0
+  }
+  dm<-paste(deg,min,sep="º ")
+  dms<-paste(dm,secfloat,sep="' ")
+  return (dms)
+}
