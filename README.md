@@ -17,5 +17,9 @@ The wrapper of `Datamaps` in `rMaps` library still doesn't have a stable option 
 ```{bash}
     "bubbles": [ ... ]
 ```
+Instead of being:
+```{bash}
+    "bubble": { "": ... }
+```
 
 Also it should be noted that it was possible to include custom polygons based on the publication of [Fellgernon Bit](http://www.r-bloggers.com/rmaps-mexico-map/)
